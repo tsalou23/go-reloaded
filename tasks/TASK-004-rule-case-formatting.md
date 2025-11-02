@@ -1,55 +1,54 @@
-# Rule: Case Formatting
+# TASK-004 — Rule: Case Formatting
 
-- **ID**: TASK-004  
-- **Owner**: Backend Lead  
-- **Size**: M  
-- **Confidence**: High  
-- **Hard Dependencies**: TASK-002  
-- **Soft Dependencies**: None  
-- **Related Blueprint Pillars**: Rule Engine  
+**Category:** Rules  
+**Stage:** Implementation → Testing → Refactor  
+**Priority:** High  
+**Owner:** tsalou23  
+**Created:** 2025-10-30  
+**Last Updated:** 2025-11-02  
+**Auditor:** _TBD_
 
-## Mission Profile
-- Implement word case rules: `(up)`, `(low)`, `(cap)`.  
-- Extend with `(up, n)`, `(low, n)`, `(cap, n)` for multi-word formatting.  
+---
 
-## Deliverables
-- `internal/rules/cases.go` with case functions.  
-- Unit tests for single and multi-word rules.  
-- Golden tests T3, T4, T5, T6.  
-- Tricky test C3.  
+## Analyze
+Apply `(up)`, `(low)`, `(cap)` and counted forms `(up, n)`, `(low, n)`, `(cap, n)`.
 
-## Acceptance Criteria
-- ✅ `go (up)` → `GO`.  
-- ✅ `LOUD (low)` → `loud`.  
-- ✅ `bridge (cap)` → `Bridge`.  
-- ✅ `so exciting (up, 2)` → `SO EXCITING`.  
-- ✅ `HELLO (low, 2) WORLD` → `hello world WORLD`.  
+---
 
-## Verification Plan
-- `unit`: Test helper functions for casing.  
-- `integration`: Golden T3–T6.  
-- `e2e`: CLI run with multi-word case rules.  
+## Tests
+| ID | Input | Expected Output |
+|----|--------|----------------|
+| T3 | `Ready, set, go (up) !` | `Ready, set, GO!` |
+| T4 | `I should stop SHOUTING (low)` | `I should stop shouting` |
+| T5 | `Welcome to the brooklyn bridge (cap)` | `Welcome to the Brooklyn Bridge` |
+| T6 | `This is so exciting (up, 2)` | `This is SO EXCITING` |
+| C3 | `HELLO (low, 2) WORLD` | `hello world WORLD` |
 
-## References
-- `docs/Analysis.md` Rule Catalog (case).  
+**Golden Tests:** T3–T6  
+**Tricky Tests:** C3  
 
-## Notes for Codex Operator
-- Pay attention to multi-word counts and edge cases (punctuation adjacency).  
+**Notes:**  
+- Verify counted forms and punctuation handling.  
 
-## PROMPT — FULL 4-STEP FLOW (execute sequentially)
+---
 
-You are GPT-Codex executing **Rule: Case Formatting (TASK-004)**.
+## Implement
+- File: `internal/rules/cases.go`
+- Helper: `applyCase(word, mode)`
+- Exported: `ApplyCase(text string) string`
 
-### Step 1 — Analyze & Confirm
-- Review rules for single vs multi-word casing.
-- WAIT for confirmation.
+---
 
-### Step 2 — Generate the Tests
-- Golden T3–T6. Tricky C3.
+## Acceptance
+- ✅ Golden tests T3–T6 pass  
+- ✅ Tricky test C3 pass  
 
-### Step 3 — Generate the Code
-- Implement case functions in cases.go.
+---
 
-### Step 4 — QA & Mark Complete
-- Run unit and CLI tests.
-- If all pass, output: **“✅ Rule: Case Formatting (TASK-004) self-verified. Please approve to mark Done.”**
+## Refactor
+_(To be completed after all tests pass)_
+
+---
+
+## Status
+- 🚧 In Progress  

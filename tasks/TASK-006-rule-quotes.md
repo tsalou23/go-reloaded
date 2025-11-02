@@ -1,51 +1,51 @@
-# Rule: Quotes Handling
+# TASK-006 — Rule: Quotes
 
-- **ID**: TASK-006  
-- **Owner**: Backend Lead  
-- **Size**: S  
-- **Confidence**: High  
-- **Hard Dependencies**: TASK-002  
-- **Soft Dependencies**: None  
-- **Related Blueprint Pillars**: Grammar & Correctness  
+**Category:** Rules  
+**Stage:** Implementation → Testing → Refactor  
+**Priority:** Medium  
+**Owner:** tsalou23  
+**Created:** 2025-10-30  
+**Last Updated:** 2025-11-02  
+**Auditor:** _TBD_
 
-## Mission Profile
-- Implement removal of unnecessary spaces inside `' '`.  
+---
 
-## Deliverables
-- `internal/rules/quotes.go` with quote cleaner.  
-- Unit tests.  
-- Golden tests T9, T10.  
-- Tricky test C5.  
+## Analyze
+Remove unnecessary spaces inside `'...'` and preserve content.  
 
-## Acceptance Criteria
-- ✅ `I am ' happy '` → `I am 'happy'`.  
-- ✅ `He said ' hello there '` → `He said 'hello there'`.  
+---
 
-## Verification Plan
-- `unit`: Test cleaner on single and multi-word cases.  
-- `integration`: Golden T9–T10.  
-- `e2e`: CLI run with quotes in text.  
+## Tests
+| ID | Input | Expected Output |
+|----|--------|----------------|
+| T9 | `I am exactly how they describe me: ' awesome '` | `I am exactly how they describe me: 'awesome'` |
+| T10 | `As Elton John said: ' I am the most well-known homosexual in the world '` | `As Elton John said: 'I am the most well-known homosexual in the world'` |
+| C5 | `He said ' hello there '` | `He said 'hello there'` |
 
-## References
-- `docs/Analysis.md` Rule Catalog (quotes).  
+**Golden Tests:** T9, T10  
+**Tricky Tests:** C5  
 
-## Notes for Codex Operator
-- Preserve punctuation outside quotes.  
+**Notes:**  
+- Handle multi-word quotes.  
+- Consider punctuation after closing quote.
 
-## PROMPT — FULL 4-STEP FLOW (execute sequentially)
+---
 
-You are GPT-Codex executing **Rule: Quotes Handling (TASK-006)**.
+## Implement
+- File: `internal/rules/quotes.go`
+- Function: `CleanQuotes(text string) string`
 
-### Step 1 — Analyze & Confirm
-- Review quote handling requirements.
-- WAIT for confirmation.
+---
 
-### Step 2 — Generate the Tests
-- Golden T9, T10. Tricky C5.
+## Acceptance
+- ✅ Golden & Tricky tests pass  
 
-### Step 3 — Generate the Code
-- Implement quote cleaner.
+---
 
-### Step 4 — QA & Mark Complete
-- Run unit and CLI tests.
-- If all pass, output: **“✅ Rule: Quotes Handling (TASK-006) self-verified. Please approve to mark Done.”**
+## Refactor
+_(To be completed after all tests pass)_
+
+---
+
+## Status
+- 🚧 In Progress  

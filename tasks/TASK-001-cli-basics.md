@@ -1,59 +1,62 @@
-# CLI Basics
+# TASK-001 — CLI Basics
 
-- **ID**: TASK-001
-- **Owner**: Backend Lead
-- **Size**: S
-- **Confidence**: High
-- **Hard Dependencies**: None
-- **Soft Dependencies**: None
-- **Related Blueprint Pillars**: Developer Experience, CLI usability
+**Category:** Core / CLI  
+**Stage:** Implementation → Testing → Refactor  
+**Priority:** High  
+**Owner:** tsalou23  
+**Created:** 2025-10-30  
+**Last Updated:** 2025-11-02  
+**Auditor:** _TBD_
 
-## Mission Profile
-- Implement the CLI entry point for Go-Reloaded.  
-- Parse `<input_file> <output_file> <mode>`.  
-- Validate mode values and return appropriate exit codes.  
-- Provide usage help when arguments are missing or invalid.
+---
 
-## Deliverables
-- `/cmd/go-reloaded/main.go` with argument parsing and error handling.  
-- Usage help message with modes listed.  
-- Exit codes: `1` for usage errors, `2` for file I/O errors.  
+## Analyze
+Implement a command-line interface to run the program as:
+go-reloaded <input_file> <output_file> <mode>
+where `<mode>` = `pipeline`, `fsm`, or `hybrid`.
 
-## Acceptance Criteria
-- ✅ Running with no args prints usage and exits with code `1`.  
-- ✅ Running with invalid mode prints:  Error: invalid mode. Use one of [pipeline|fsm|hybrid]
-- ✅ Running with invalid file path exits with code `2`.  
-- ✅ Running with valid input/output runs without crash.  
+Handle:
+- Missing arguments → usage help  
+- Invalid mode → error message  
+- File I/O errors → proper exit code  
 
-## Verification Plan
-- `unit`: Test arg parsing with valid and invalid args.  
-- `integration`: CLI run with sample file → output file generated.  
-- `e2e`: Shell script validating exit codes and messages.  
+---
 
-## References
-- `docs/Analysis.md` CLI Mode Specification.  
+## Tests
+| ID | Scenario | Expected Behavior |
+|----|-----------|------------------|
+| CLI-1 | Missing arguments | Prints usage message, exits code 1 |
+| CLI-2 | Invalid mode | Prints “invalid mode” error, exits code 1 |
+| CLI-3 | I/O error (bad path) | Exits with code 2 |
 
-## Notes for Codex Operator
-- Keep CLI minimal; detailed processing logic comes later.  
-- Ensure output messages match exactly what’s in Analysis.md.  
+**Notes:**  
+- Validate with integration test (`tests/cli_test.go`)  
 
-## PROMPT — FULL 4-STEP FLOW (execute sequentially)
+**Testing Strategy:**  
+- Use `os.Args` manipulation in test environment.  
+- Run `go test ./tests/cli_test.go`.
 
-You are GPT-Codex executing **CLI Basics (TASK-001)**.
+---
 
-### Step 1 — Analyze & Confirm
-- Review CLI requirements in `docs/Analysis.md`.
-- Summarize expected args, modes, and error handling.
-- WAIT for confirmation.
+## Implement
+- File: `cmd/go-reloaded/main.go`
+- Functions: argument parser, usage printer
+- Exit codes:  
+  - `1` → bad usage  
+  - `2` → file I/O error  
 
-### Step 2 — Generate the Tests
-- Write tests for no args, invalid mode, invalid file, valid run.
-- Capture exit codes and stdout/stderr.
+---
 
-### Step 3 — Generate the Code
-- Implement `main.go` parsing logic, usage help, error handling.
+## Acceptance
+- ✅ CLI behaves according to spec  
+- ✅ Error handling validated  
 
-### Step 4 — QA & Mark Complete
-- Run CLI manually and automated tests.
-- If all pass, output: **“✅ CLI Basics (TASK-001) self-verified. Please approve to mark Done.”**
+---
 
+## Refactor
+_(To be completed after all tests pass)_
+
+---
+
+## Status
+- 🚧 In Progress  

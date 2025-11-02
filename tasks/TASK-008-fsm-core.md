@@ -1,51 +1,48 @@
-# FSM Core
+# TASK-008 — FSM Core
 
-- **ID**: TASK-008  
-- **Owner**: Backend Lead  
-- **Size**: M  
-- **Confidence**: Medium  
-- **Hard Dependencies**: TASK-001  
-- **Soft Dependencies**: TASK-002  
-- **Related Blueprint Pillars**: Architecture Foundations  
+**Category:** Processor  
+**Stage:** Implementation → Testing → Refactor  
+**Priority:** High  
+**Owner:** tsalou23  
+**Created:** 2025-10-30  
+**Last Updated:** 2025-11-02  
+**Auditor:** _TBD_
 
-## Mission Profile
-- Implement Finite State Machine processor for parsing.  
-- Handle tokens, markers, quotes, and punctuation sequences.  
+---
 
-## Deliverables
-- `internal/processor/fsm.go`.  
-- FSM states: Normal, MarkerFound, InQuotes, InPunctuation.  
-- CLI runs in `fsm` mode with identity output.  
+## Analyze
+Create a Finite State Machine (FSM) for parsing input and detecting markers `(hex)`, `(up)`, etc.
 
-## Acceptance Criteria
-- ✅ CLI runs in fsm mode without crash.  
-- ✅ Input text returned unchanged.  
-- ✅ FSM states initialized correctly.  
+---
 
-## Verification Plan
-- `unit`: FSM transitions tested.  
-- `integration`: CLI run with FSM mode identity transform.  
+## Tests
+| ID | Scenario | Expected Behavior |
+|----|-----------|------------------|
+| FSM-1 | Correctly transitions NORMAL → MARKER → APPLY | Tokens recognized properly |
+| FSM-2 | Handles quotes `' ... '` as atomic | Tokens inside quotes untouched |
 
-## References
-- `docs/ARCHITECTURE.md` FSM section.  
+**Notes:**  
+- Compare FSM output with tokenizer baseline.  
 
-## Notes for Codex Operator
-- Start with skeleton FSM, add rules later.  
+---
 
-## PROMPT — FULL 4-STEP FLOW (execute sequentially)
+## Implement
+- File: `internal/processor/fsm.go`
+- Structs: `State`, `Transition`
+- FSM states: NORMAL, MARKER_FOUND, APPLY_RULE
 
-You are GPT-Codex executing **FSM Core (TASK-008)**.
+---
 
-### Step 1 — Analyze & Confirm
-- Review FSM design.
-- WAIT for confirmation.
+## Acceptance
+- ✅ FSM parses input correctly  
+- ✅ Matches pipeline tokenizer output  
 
-### Step 2 — Generate the Tests
-- Unit tests for state transitions.
+---
 
-### Step 3 — Generate the Code
-- Implement FSM skeleton.
+## Refactor
+_(To be completed after all tests pass)_
 
-### Step 4 — QA & Mark Complete
-- Run FSM in CLI, confirm identity.
-- If all pass, output: **“✅ FSM Core (TASK-008) self-verified. Please approve to mark Done.”**
+---
+
+## Status
+- 🚧 In Progress  

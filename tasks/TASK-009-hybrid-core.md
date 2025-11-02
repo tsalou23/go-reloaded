@@ -1,50 +1,43 @@
-# Hybrid Core
+# TASK-009 — Hybrid Core
 
-- **ID**: TASK-009  
-- **Owner**: Backend Lead  
-- **Size**: M  
-- **Confidence**: Medium  
-- **Hard Dependencies**: TASK-002, TASK-008  
-- **Soft Dependencies**: None  
-- **Related Blueprint Pillars**: Architecture Foundations  
+**Category:** Processor  
+**Stage:** Implementation → Testing → Refactor  
+**Priority:** Medium  
+**Owner:** tsalou23  
+**Created:** 2025-10-30  
+**Last Updated:** 2025-11-02  
+**Auditor:** _TBD_
 
-## Mission Profile
-- Implement hybrid processor.  
-- Use FSM for tokenization + pipeline for rules.  
+---
 
-## Deliverables
-- `internal/processor/hybrid.go`.  
-- CLI runs in `hybrid` mode with identity transform.  
+## Analyze
+Combine FSM tokenizer with pipeline rules for best context awareness.
 
-## Acceptance Criteria
-- ✅ CLI runs in hybrid mode without crash.  
-- ✅ Input text returned unchanged.  
-- ✅ FSM tokenizer integrated with pipeline rules.  
+---
 
-## Verification Plan
-- `unit`: Test FSM + pipeline integration.  
-- `integration`: CLI run hybrid mode identity.  
+## Tests
+| ID | Scenario | Expected Behavior |
+|----|-----------|------------------|
+| HYB-1 | Hybrid matches FSM & pipeline outputs | Identical text output |
+| HYB-2 | Handles quotes & punctuation context | Correct combined result |
 
-## References
-- `docs/ARCHITECTURE.md` Hybrid section.  
+---
 
-## Notes for Codex Operator
-- Modular integration between FSM and pipeline.  
+## Implement
+- File: `internal/processor/hybrid.go`
+- Combines `fsm.Tokenize()` + `pipeline.Process()`
 
-## PROMPT — FULL 4-STEP FLOW (execute sequentially)
+---
 
-You are GPT-Codex executing **Hybrid Core (TASK-009)**.
+## Acceptance
+- ✅ Hybrid passes all Golden & Tricky tests  
 
-### Step 1 — Analyze & Confirm
-- Review hybrid integration needs.
-- WAIT for confirmation.
+---
 
-### Step 2 — Generate the Tests
-- Test tokenizer → pipeline passthrough.
+## Refactor
+_(To be completed after all tests pass)_
 
-### Step 3 — Generate the Code
-- Implement hybrid processor.
+---
 
-### Step 4 — QA & Mark Complete
-- Run hybrid CLI and confirm identity.
-- If all pass, output: **“✅ Hybrid Core (TASK-009) self-verified. Please approve to mark Done.”**
+## Status
+- 🚧 In Progress  

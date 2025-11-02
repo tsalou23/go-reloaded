@@ -1,52 +1,39 @@
-# Pipeline Core
+# TASK-002 — Pipeline Core
 
-- **ID**: TASK-002  
-- **Owner**: Backend Lead  
-- **Size**: S  
-- **Confidence**: High  
-- **Hard Dependencies**: TASK-001  
-- **Soft Dependencies**: None  
-- **Related Blueprint Pillars**: Architecture Foundations  
+**Category:** Processor  
+**Stage:** Implementation → Testing → Refactor  
+**Priority:** High  
+**Owner:** tsalou23  
+**Created:** 2025-10-30  
+**Last Updated:** 2025-11-02  
+**Auditor:** _TBD_
 
-## Mission Profile
-- Implement the baseline **Pipeline processor**.  
-- Sequential stages with tokenizer and joiner.  
-- At this stage, rules are not applied; identity transform only.  
+---
 
-## Deliverables
-- `internal/processor/processor.go` with Processor interface.  
-- `internal/processor/pipeline.go` with `PipelineProcessor`.  
-- CLI runs in `pipeline` mode successfully.  
+## Analyze
+Design the baseline modular processor (pipeline).  
+Sequence: tokenize → apply rules → fix articles → clean quotes → fix punctuation → join output.
 
-## Acceptance Criteria
-- ✅ CLI runs in pipeline mode without crashing.  
-- ✅ Input text is output unchanged.  
-- ✅ Unit test confirms identity transform.  
+## Tests
+- Verify each step is called in correct order  
+- Validate rule integration (e.g. hex, up, low)  
 
-## Verification Plan
-- `unit`: Pipeline returns same text given input.  
-- `integration`: CLI run in pipeline mode → unchanged text.  
+## Implement
+- Files:  
+  - `internal/processor/processor.go` (interface)  
+  - `internal/processor/pipeline.go`  
+- Function: `ProcessPipeline(text string) string`
 
-## References
-- `docs/ARCHITECTURE.md`: Pipeline overview.  
+## Acceptance
+- ✅ End-to-end flow produces expected Golden results  
+- ✅ All rule modules integrated  
 
-## Notes for Codex Operator
-- Keep design modular for later stages.  
+## Dependencies
+- Requires: TASK-001 (CLI)  
+- Provides: Base for FSM & Hybrid
 
-## PROMPT — FULL 4-STEP FLOW (execute sequentially)
+## Refactor
+_(To be completed after all tests pass)_
 
-You are GPT-Codex executing **Pipeline Core (TASK-002)**.
-
-### Step 1 — Analyze & Confirm
-- Review Processor interface needs.
-- WAIT for confirmation.
-
-### Step 2 — Generate the Tests
-- Write identity tests (input = output).
-
-### Step 3 — Generate the Code
-- Implement Processor interface and PipelineProcessor skeleton.
-
-### Step 4 — QA & Mark Complete
-- Run CLI in pipeline mode and validate identity.
-- If all pass, output: **“✅ Pipeline Core (TASK-002) self-verified. Please approve to mark Done.”**
+## Status
+- 🚧 In Progress  

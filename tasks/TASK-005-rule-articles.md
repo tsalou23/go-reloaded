@@ -1,51 +1,51 @@
-# Rule: Article Fix
+# TASK-005 — Rule: Articles (a → an)
 
-- **ID**: TASK-005  
-- **Owner**: Backend Lead  
-- **Size**: S  
-- **Confidence**: Medium  
-- **Hard Dependencies**: TASK-002  
-- **Soft Dependencies**: None  
-- **Related Blueprint Pillars**: Grammar & Correctness  
+**Category:** Rules  
+**Stage:** Implementation → Testing → Refactor  
+**Priority:** Medium  
+**Owner:** tsalou23  
+**Created:** 2025-10-30  
+**Last Updated:** 2025-11-02  
+**Auditor:** _TBD_
 
-## Mission Profile
-- Implement article correction: replace `a` with `an` before vowels and `h` words.  
+---
 
-## Deliverables
-- `internal/rules/articles.go` with article fixer.  
-- Unit tests for vowel + h cases.  
-- Golden test T8.  
-- Tricky test C1.  
+## Analyze
+Replace “a” with “an” when next word starts with a vowel or `h`.
 
-## Acceptance Criteria
-- ✅ `a amazing rock` → `an amazing rock`.  
-- ✅ `a honest man` → `an honest man`.  
+---
 
-## Verification Plan
-- `unit`: Article fixer tests.  
-- `integration`: Golden T8.  
-- `e2e`: CLI run with text containing article errors.  
+## Tests
+| ID | Input | Expected Output |
+|----|--------|----------------|
+| T8 | `There it was. A amazing rock!` | `There it was. An amazing rock!` |
+| C1 | `a honest man` | `an honest man` |
 
-## References
-- `docs/Analysis.md` Rule Catalog (article fix).  
+**Golden Tests:** T8  
+**Tricky Tests:** C1  
 
-## Notes for Codex Operator
-- Ensure case sensitivity is handled (e.g., “A apple” → “An apple”).  
+**Notes:**  
+- Add case sensitivity check (`A honest mistake`).  
 
-## PROMPT — FULL 4-STEP FLOW (execute sequentially)
+---
 
-You are GPT-Codex executing **Rule: Article Fix (TASK-005)**.
+## Implement
+- File: `internal/rules/articles.go`
+- Function: `FixArticles(text string) string`
+- Regex or manual string scan for word boundaries.
 
-### Step 1 — Analyze & Confirm
-- Review vowel and “h” logic.
-- WAIT for confirmation.
+---
 
-### Step 2 — Generate the Tests
-- Golden T8. Tricky C1.
+## Acceptance
+- ✅ Golden + Tricky tests pass  
+- ✅ Handles vowels and `h` prefix  
 
-### Step 3 — Generate the Code
-- Implement article fixer.
+---
 
-### Step 4 — QA & Mark Complete
-- Run unit and CLI tests.
-- If all pass, output: **“✅ Rule: Article Fix (TASK-005) self-verified. Please approve to mark Done.”**
+## Refactor
+_(To be completed after all tests pass)_
+
+---
+
+## Status
+- 🚧 In Progress  
