@@ -1,7 +1,7 @@
 # TASK-002 — Pipeline Core
 
 **Category:** Processor  
-**Stage:** Implementation → Testing → Refactor  
+**Stage:** Implementation → Integration → Refactor  
 **Priority:** High  
 **Owner:** tsalou23  
 **Created:** 2025-10-30  
@@ -11,29 +11,54 @@
 ---
 
 ## Analyze
-Design the baseline modular processor (pipeline).  
-Sequence: tokenize → apply rules → fix articles → clean quotes → fix punctuation → join output.
+Implement the modular **pipeline** orchestrator that applies all rule processors in order:
+1. NumericFixer (hex, bin)
+2. CaseFixer (up, low, cap)
+3. ArticleFixer (a → an) 
+4. QuoteCleaner
+5. PunctuationFixer
+
+---
 
 ## Tests
-- Verify each step is called in correct order  
-- Validate rule integration (e.g. hex, up, low)  
+| ID | Scenario | Expected Behavior |
+|----|-----------|------------------|
+| PIPE-1 | All rule functions called sequentially | Output matches combination of rule results |
+| PIPE-2 | Empty input | Returns empty string |
+| PIPE-3 | Mixed rules (integration) | Matches paragraph expected output |
+
+**Notes:**  
+- Use mock functions for rules before actual implementation.  
+- Integration verified after Tasks 003-007 complete.
+
+**Testing Strategy:**  
+- Implement tests in `tests/paragraph_test.go`.
+
+---
 
 ## Implement
-- Files:  
-  - `internal/processor/processor.go` (interface)  
-  - `internal/processor/pipeline.go`  
-- Function: `ProcessPipeline(text string) string`
+- File: `internal/processor/pipeline.go`
+- Interface: `Processor`
+- Function:  
+  ```go
+  func (p *Pipeline) Process(text string) string {
+      text = rules.ApplyNumbers(text)
+      text = rules.ApplyCase(text)
+      text = rules.FixArticles(text)
+      text = rules.CleanQuotes(text)
+      text = rules.FixPunctuation(text)
+      return text
+  }
+Acceptance
 
-## Acceptance
-- ✅ End-to-end flow produces expected Golden results  
-- ✅ All rule modules integrated  
+✅ Executes all rule stages in order
 
-## Dependencies
-- Requires: TASK-001 (CLI)  
-- Provides: Base for FSM & Hybrid
+✅ Ready for integration with FSM & Hybrid
 
-## Refactor
-_(To be completed after all tests pass)_
+Refactor
 
-## Status
-- 🚧 In Progress  
+(To be completed after all tests pass)
+
+Status
+
+🚧 In Progress
