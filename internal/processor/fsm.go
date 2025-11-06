@@ -1,7 +1,7 @@
 package processor
 
 import (
-	"go-reloaded/internal/tokenizer"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -27,85 +27,126 @@ func NewFSM() *FSM {
 
 // Process applies rules using FSM approach with tokenization
 func (f *FSM) Process(text string) string {
-	tokens := tokenizer.Tokenize(text)
-	result := make([]string, 0, len(tokens))
-	
-	for i, token := range tokens {
-		switch f.state {
-		case Normal:
-			if token.Type == tokenizer.Marker {
-				f.state = InMarker
-				result = f.applyMarker(result, token.Value)
-			} else if strings.HasPrefix(token.Value, "'") {
-				f.state = InQuotes
-				result = append(result, f.cleanQuote(token.Value))
-			} else {
-				result = append(result, f.fixArticle(result, token.Value))
-			}
-		case InMarker:
-			f.state = Normal
-			result = append(result, token.Value)
-		case InQuotes:
-			if strings.HasSuffix(token.Value, "'") {
-				f.state = Normal
-			}
-			result = append(result, token.Value)
-		}
-	}
-	
-	return f.fixPunctuation(strings.Join(result, " "))
-}
-
-func (f *FSM) applyMarker(result []string, marker string) []string {
-	if len(result) == 0 {
-		return result
-	}
-	
-	lastIdx := len(result) - 1
-	lastWord := result[lastIdx]
-	
-	if marker == "(hex)" {
-		if val, err := strconv.ParseInt(lastWord, 16, 64); err == nil {
-			result[lastIdx] = strconv.FormatInt(val, 10)
-		}
-	} else if marker == "(bin)" {
-		if val, err := strconv.ParseInt(lastWord, 2, 64); err == nil {
-			result[lastIdx] = strconv.FormatInt(val, 10)
-		}
-	} else if marker == "(up)" {
-		result[lastIdx] = strings.ToUpper(lastWord)
-	} else if marker == "(low)" {
-		result[lastIdx] = strings.ToLower(lastWord)
-	} else if marker == "(cap)" {
-		result[lastIdx] = strings.Title(strings.ToLower(lastWord))
-	}
-	
-	return result
-}
-
-func (f *FSM) fixArticle(result []string, word string) string {
-	if len(result) > 0 && (result[len(result)-1] == "a" || result[len(result)-1] == "A") {
-		if len(word) > 0 && strings.ContainsAny(string(word[0]), "aeiouAEIOUhH") {
-			if result[len(result)-1] == "A" {
-				result[len(result)-1] = "An"
-			} else {
-				result[len(result)-1] = "an"
-			}
-		}
-	}
-	return word
-}
-
-func (f *FSM) cleanQuote(text string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(text, "' ", "'"), " '", "'")
-}
-
-func (f *FSM) fixPunctuation(text string) string {
-	text = strings.ReplaceAll(text, " ,", ",")
-	text = strings.ReplaceAll(text, " !", "!")
-	text = strings.ReplaceAll(text, " ?", "?")
-	text = strings.ReplaceAll(text, " .", ".")
-	text = strings.ReplaceAll(text, " :", ":")
-	text = strings.ReplaceAll(text, " ;", ";")
+	// Apply transformations using regex patterns like pipeline
+	text = f.applyNumberConversions(text)
+	text = f.applyCaseTransformations(text)
+	text = f.applyArticleCorrections(text)
+	text = f.applyQuoteCleaning(text)
+	text = f.applyPunctuationFixes(text)
 	return text
+}
+
+func (f *FSM) applyNumberConversions(text string) string {
+	hexRe := regexp.MustCompile(`([0-9A-Fa-f]+)\s+\(hex\)`)
+	text = hexRe.ReplaceAllStringFunc(text, func(match string) string {
+		parts := strings.Fields(match)
+		if val, err := strconv.ParseInt(parts[0], 16, 64); err == nil {
+			return strconv.FormatInt(val, 10)
+		}
+		return match
+	})
+	
+	binRe := regexp.MustCompile(`([01]+)\s+\(bin\)`)
+	text = binRe.ReplaceAllStringFunc(text, func(match string) string {
+		parts := strings.Fields(match)
+		if val, err := strconv.ParseInt(parts[0], 2, 64); err == nil {
+			return strconv.FormatInt(val, 10)
+		}
+		return match
+	})
+	
+	return text
+}
+
+func (f *FSM) applyCaseTransformations(text string) string {
+	// Multi-word transformations
+	multiRe := regexp.MustCompile(`((?:\S+\s+){0,9}\S+)\s+\((up|low|cap),\s*(\d+)\)`)
+	text = multiRe.ReplaceAllStringFunc(text, func(match string) string {
+		re := regexp.MustCompile(`^(.+)\s+\((up|low|cap),\s*(\d+)\)$`)
+		matches := re.FindStringSubmatch(match)
+		if len(matches) != 4 {
+			return match
+		}
+		
+		words := strings.Fields(matches[1])
+		command := matches[2]
+		count, _ := strconv.Atoi(matches[3])
+		
+		if count <= 0 || count > len(words) {
+			return match
+		}
+		
+		for i := len(words) - count; i < len(words); i++ {
+			switch command {
+			case "up":
+				words[i] = strings.ToUpper(words[i])
+			case "low":
+				words[i] = strings.ToLower(words[i])
+			case "cap":
+				words[i] = strings.Title(strings.ToLower(words[i]))
+			}
+		}
+		
+		return strings.Join(words, " ")
+	})
+	
+	// Single word transformations
+	singleRe := regexp.MustCompile(`(\S+)\s+\((up|low|cap)\)`)
+	text = singleRe.ReplaceAllStringFunc(text, func(match string) string {
+		re := regexp.MustCompile(`^(\S+)\s+\((up|low|cap)\)$`)
+		matches := re.FindStringSubmatch(match)
+		if len(matches) != 3 {
+			return match
+		}
+		
+		word := matches[1]
+		command := matches[2]
+		
+		switch command {
+		case "up":
+			return strings.ToUpper(word)
+		case "low":
+			return strings.ToLower(word)
+		case "cap":
+			return strings.Title(strings.ToLower(word))
+		}
+		
+		return match
+	})
+	
+	return text
+}
+
+func (f *FSM) applyArticleCorrections(text string) string {
+	silentH := []string{"honest", "hour", "honor", "heir"}
+	
+	for _, word := range silentH {
+		text = regexp.MustCompile(`\ba\s+`+word).ReplaceAllString(text, "an "+word)
+		text = regexp.MustCompile(`\bA\s+`+word).ReplaceAllString(text, "An "+word)
+	}
+	
+	vowelRe := regexp.MustCompile(`\ba\s+([aeiouAEIOU])`)
+	text = vowelRe.ReplaceAllString(text, "an $1")
+	
+	vowelReUpper := regexp.MustCompile(`\bA\s+([aeiouAEIOU])`)
+	text = vowelReUpper.ReplaceAllString(text, "An $1")
+	
+	return text
+}
+
+func (f *FSM) applyQuoteCleaning(text string) string {
+	// Handle quotes with spaces inside
+	quoteRe := regexp.MustCompile(`'\s+([^']*?)\s+'`)
+	text = quoteRe.ReplaceAllString(text, "'$1'")
+	
+	// Handle quotes that contain apostrophes
+	quoteRe2 := regexp.MustCompile(`'\s+([^']*?'[^']*?)\s+'`)
+	text = quoteRe2.ReplaceAllString(text, "'$1'")
+	
+	return text
+}
+
+func (f *FSM) applyPunctuationFixes(text string) string {
+	punctRe := regexp.MustCompile(`\s+([,.!?:;])`)
+	return punctRe.ReplaceAllString(text, "$1")
 }
