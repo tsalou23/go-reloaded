@@ -1,7 +1,7 @@
 package processor
 
 import (
-	"regexp"
+	"go-reloaded/internal/rules"
 	"strconv"
 	"strings"
 )
@@ -25,128 +25,167 @@ func NewFSM() *FSM {
 	return &FSM{state: Normal}
 }
 
-// Process applies rules using FSM approach with tokenization
+// Process applies rules using FSM approach with character-by-character processing
 func (f *FSM) Process(text string) string {
-	// Apply transformations using regex patterns like pipeline
-	text = f.applyNumberConversions(text)
-	text = f.applyCaseTransformations(text)
-	text = f.applyArticleCorrections(text)
-	text = f.applyQuoteCleaning(text)
-	text = f.applyPunctuationFixes(text)
-	return text
+	// FSM processes text character by character, tracking state
+	result := f.processWithFSM(text)
+	
+	// Apply articles last to avoid conflicts
+	result = rules.FixArticles(result)
+	return result
 }
 
-func (f *FSM) applyNumberConversions(text string) string {
-	hexRe := regexp.MustCompile(`([0-9A-Fa-f]+)\s+\(hex\)`)
-	text = hexRe.ReplaceAllStringFunc(text, func(match string) string {
-		parts := strings.Fields(match)
-		if val, err := strconv.ParseInt(parts[0], 16, 64); err == nil {
-			return strconv.FormatInt(val, 10)
-		}
-		return match
-	})
+// processWithFSM uses finite state machine to process text character by character
+func (f *FSM) processWithFSM(text string) string {
+	var result strings.Builder
+	var currentWord strings.Builder
+	var markerContent strings.Builder
 	
-	binRe := regexp.MustCompile(`([01]+)\s+\(bin\)`)
-	text = binRe.ReplaceAllStringFunc(text, func(match string) string {
-		parts := strings.Fields(match)
-		if val, err := strconv.ParseInt(parts[0], 2, 64); err == nil {
-			return strconv.FormatInt(val, 10)
-		}
-		return match
-	})
+	f.state = Normal
+	runes := []rune(text)
 	
-	return text
-}
-
-func (f *FSM) applyCaseTransformations(text string) string {
-	// Multi-word transformations
-	multiRe := regexp.MustCompile(`((?:\S+\s+){0,9}\S+)\s+\((up|low|cap),\s*(\d+)\)`)
-	text = multiRe.ReplaceAllStringFunc(text, func(match string) string {
-		re := regexp.MustCompile(`^(.+)\s+\((up|low|cap),\s*(\d+)\)$`)
-		matches := re.FindStringSubmatch(match)
-		if len(matches) != 4 {
-			return match
-		}
-		
-		words := strings.Fields(matches[1])
-		command := matches[2]
-		count, _ := strconv.Atoi(matches[3])
-		
-		if count <= 0 || count > len(words) {
-			return match
-		}
-		
-		for i := len(words) - count; i < len(words); i++ {
-			switch command {
-			case "up":
-				words[i] = strings.ToUpper(words[i])
-			case "low":
-				words[i] = strings.ToLower(words[i])
-			case "cap":
-				words[i] = strings.Title(strings.ToLower(words[i]))
+	for _, char := range runes {
+		switch f.state {
+		case Normal:
+			if char == '(' {
+				// Save current word and enter marker state
+				if currentWord.Len() > 0 {
+					result.WriteString(currentWord.String())
+					currentWord.Reset()
+				}
+				f.state = InMarker
+				markerContent.Reset()
+			} else if char == '\'' {
+				// Handle quotes
+				if currentWord.Len() > 0 {
+					result.WriteString(currentWord.String())
+					currentWord.Reset()
+				}
+				f.state = InQuotes
+				result.WriteRune(char)
+			} else if char == ' ' || char == '\t' || char == '\n' {
+				// Word boundary
+				if currentWord.Len() > 0 {
+					result.WriteString(currentWord.String())
+					currentWord.Reset()
+				}
+				result.WriteRune(char)
+			} else {
+				currentWord.WriteRune(char)
+			}
+			
+		case InMarker:
+			if char == ')' {
+				// Process the marker and previous word
+				marker := markerContent.String()
+				f.state = Normal
+				
+				// Apply transformation based on marker
+				prevText := result.String()
+				transformedText := f.applyMarkerTransformation(prevText, marker)
+				result.Reset()
+				result.WriteString(transformedText)
+			} else {
+				markerContent.WriteRune(char)
+			}
+			
+		case InQuotes:
+			result.WriteRune(char)
+			if char == '\'' {
+				f.state = Normal
 			}
 		}
-		
-		return strings.Join(words, " ")
-	})
-	
-	// Single word transformations
-	singleRe := regexp.MustCompile(`(\S+)\s+\((up|low|cap)\)`)
-	text = singleRe.ReplaceAllStringFunc(text, func(match string) string {
-		re := regexp.MustCompile(`^(\S+)\s+\((up|low|cap)\)$`)
-		matches := re.FindStringSubmatch(match)
-		if len(matches) != 3 {
-			return match
-		}
-		
-		word := matches[1]
-		command := matches[2]
-		
-		switch command {
-		case "up":
-			return strings.ToUpper(word)
-		case "low":
-			return strings.ToLower(word)
-		case "cap":
-			return strings.Title(strings.ToLower(word))
-		}
-		
-		return match
-	})
-	
-	return text
-}
-
-func (f *FSM) applyArticleCorrections(text string) string {
-	silentH := []string{"honest", "hour", "honor", "heir"}
-	
-	for _, word := range silentH {
-		text = regexp.MustCompile(`\ba\s+`+word).ReplaceAllString(text, "an "+word)
-		text = regexp.MustCompile(`\bA\s+`+word).ReplaceAllString(text, "An "+word)
 	}
 	
-	vowelRe := regexp.MustCompile(`\ba\s+([aeiouAEIOU])`)
-	text = vowelRe.ReplaceAllString(text, "an $1")
+	// Add any remaining word
+	if currentWord.Len() > 0 {
+		result.WriteString(currentWord.String())
+	}
 	
-	vowelReUpper := regexp.MustCompile(`\bA\s+([aeiouAEIOU])`)
-	text = vowelReUpper.ReplaceAllString(text, "An $1")
+	// Clean up quotes and punctuation
+	finalResult := result.String()
+	finalResult = rules.CleanQuotes(finalResult)
+	finalResult = rules.FixPunctuation(finalResult)
 	
-	return text
+	return finalResult
 }
 
-func (f *FSM) applyQuoteCleaning(text string) string {
-	// Handle quotes with spaces inside
-	quoteRe := regexp.MustCompile(`'\s+([^']*?)\s+'`)
-	text = quoteRe.ReplaceAllString(text, "'$1'")
+// applyMarkerTransformation applies transformations based on markers
+func (f *FSM) applyMarkerTransformation(text, marker string) string {
+	words := strings.Fields(text)
+	if len(words) == 0 {
+		return text
+	}
 	
-	// Handle quotes that contain apostrophes
-	quoteRe2 := regexp.MustCompile(`'\s+([^']*?'[^']*?)\s+'`)
-	text = quoteRe2.ReplaceAllString(text, "'$1'")
+	// Handle hex conversion
+	if marker == "hex" {
+		lastWord := words[len(words)-1]
+		if val, err := strconv.ParseInt(lastWord, 16, 64); err == nil {
+			words[len(words)-1] = strconv.FormatInt(val, 10)
+		}
+		return strings.Join(words, " ")
+	}
+	
+	// Handle bin conversion
+	if marker == "bin" {
+		lastWord := words[len(words)-1]
+		if val, err := strconv.ParseInt(lastWord, 2, 64); err == nil {
+			words[len(words)-1] = strconv.FormatInt(val, 10)
+		}
+		return strings.Join(words, " ")
+	}
+	
+	// Handle case transformations
+	if marker == "up" {
+		if len(words) > 0 {
+			words[len(words)-1] = strings.ToUpper(words[len(words)-1])
+		}
+		return strings.Join(words, " ")
+	}
+	
+	if marker == "low" {
+		if len(words) > 0 {
+			words[len(words)-1] = strings.ToLower(words[len(words)-1])
+		}
+		return strings.Join(words, " ")
+	}
+	
+	if marker == "cap" {
+		if len(words) > 0 {
+			lastWord := words[len(words)-1]
+			// Don't override already uppercase words
+			if lastWord != strings.ToUpper(lastWord) || len(lastWord) == 1 {
+				words[len(words)-1] = strings.Title(strings.ToLower(lastWord))
+			}
+		}
+		return strings.Join(words, " ")
+	}
+	
+	// Handle numbered transformations (simplified)
+	if strings.Contains(marker, ",") {
+		parts := strings.Split(marker, ",")
+		if len(parts) == 2 {
+			cmd := strings.TrimSpace(parts[0])
+			nStr := strings.TrimSpace(parts[1])
+			if n, err := strconv.Atoi(nStr); err == nil && n > 0 {
+				if n <= len(words) {
+					for i := len(words) - n; i < len(words); i++ {
+						switch cmd {
+						case "up":
+							words[i] = strings.ToUpper(words[i])
+						case "low":
+							words[i] = strings.ToLower(words[i])
+						case "cap":
+							if words[i] != strings.ToUpper(words[i]) || len(words[i]) == 1 {
+								words[i] = strings.Title(strings.ToLower(words[i]))
+							}
+						}
+					}
+				}
+			}
+		}
+		return strings.Join(words, " ")
+	}
 	
 	return text
-}
-
-func (f *FSM) applyPunctuationFixes(text string) string {
-	punctRe := regexp.MustCompile(`\s+([,.!?:;])`)
-	return punctRe.ReplaceAllString(text, "$1")
 }

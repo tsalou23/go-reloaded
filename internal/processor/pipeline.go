@@ -12,10 +12,10 @@ func NewPipeline() *Pipeline {
 
 // Process applies all rules in the specified order
 func (p *Pipeline) Process(text string) string {
-	text = rules.ApplyNumbers(text)
 	text = rules.ApplyCase(text)
-	text = rules.FixArticles(text)
+	text = rules.ApplyNumbers(text)
 	text = rules.CleanQuotes(text)
 	text = rules.FixPunctuation(text)
+	text = rules.FixArticles(text) // Apply articles last to avoid conflicts
 	return text
 }

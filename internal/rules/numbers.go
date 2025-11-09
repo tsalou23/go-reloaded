@@ -17,6 +17,8 @@ func ApplyNumbers(text string) string {
 			if val, err := strconv.ParseInt(hexStr, 16, 64); err == nil {
 				return strconv.FormatInt(val, 10)
 			}
+			// Invalid hex - remove the (hex) marker
+			return hexStr
 		}
 		return match
 	})
@@ -30,6 +32,8 @@ func ApplyNumbers(text string) string {
 			if val, err := strconv.ParseInt(binStr, 2, 64); err == nil {
 				return strconv.FormatInt(val, 10)
 			}
+			// Invalid bin - remove the (bin) marker
+			return binStr
 		}
 		return match
 	})
