@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"go-reloaded/internal/rules"
 	"strings"
 	"strconv"
 )
@@ -50,6 +51,8 @@ func (r *RealtimeFSM) handleNormal(char rune) string {
 		r.output.WriteRune(char)
 		result := r.output.String()
 		r.output.Reset()
+		// Apply article corrections to the result
+		result = rules.FixArticles(result)
 		return result
 		
 	case '\'':

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"go-reloaded/internal/processor"
+	"go-reloaded/internal/rules"
 	"os"
 	"strings"
 )
@@ -43,7 +44,12 @@ func main() {
 			output.WriteString(buffer)
 		}
 
-		fmt.Printf("Output: %s\n\n", output.String())
+		// Apply all final rules to complete output
+		finalOutput := output.String()
+		finalOutput = rules.CleanQuotes(finalOutput)
+		finalOutput = rules.FixPunctuation(finalOutput)
+		finalOutput = rules.FixArticles(finalOutput)
+		fmt.Printf("Output: %s\n\n", finalOutput)
 		fsm.Reset() // Reset for next input
 	}
 }
